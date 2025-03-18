@@ -4,12 +4,16 @@
 \alias{get_geo_mosaic_name}
 \title{Get geoserver mosaic stores}
 \usage{
-get_geo_mosaic_name(url_root, workspace)
+get_geo_mosaic_name(url_root, workspace, user, password)
 }
 \arguments{
 \item{url_root}{Url root where the Geoserver is located.}
 
 \item{workspace}{Name of the workspace from which the mosaic datastores are to be obtained.}
+
+\item{user}{User to authenticate in the Geoserver.}
+
+\item{password}{Password to authenticate in the Geoserver.}
 }
 \value{
 A dataframe with mosaics stores information.
@@ -20,7 +24,7 @@ Retrieves and lists all the mosaic stores of a specific workspace using the HTTP
 \examples{
 url_root = "https://geo.aclimate.org/geoserver/"
 workspace = "climate_indices_pe"
-obj_f = get_geo_mosaic_name(url_root, workspace)
+obj_f = get_geo_mosaic_name(url_root, workspace, user, password)
 print(obj_f)
 
 }
