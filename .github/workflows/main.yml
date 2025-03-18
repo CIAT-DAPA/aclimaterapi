@@ -24,10 +24,6 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
-    - name: Create geo_config
-      run: |
-        GEO_CONFIG=$(echo "${{ secrets.GEO_CONFIG }}")
-        echo "$GEO_CONFIG" > geo_config.txt
 
     - name: Set up R
       uses: r-lib/actions/setup-r@f57f1301a053485946083d7a45022b278929a78a
@@ -86,10 +82,6 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
-    - name: Create geo_config
-      run: |
-        GEO_CONFIG=$(echo "${{ secrets.GEO_CONFIG }}")
-        echo "$GEO_CONFIG" > geo_config.txt
 
     - name: Set up R
       uses: r-lib/actions/setup-r@f57f1301a053485946083d7a45022b278929a78a
@@ -112,6 +104,13 @@ jobs:
 
     - name: Run Build
       run: |
+        library(devtools)
+        library(roxygen2)
+        library(shiny)
+        library(httr)
+        library(rjson)
+        library(raster)
+        library(sf)
         devtools::document()
         devtools::build(path = "./")
       shell: Rscript {0}
