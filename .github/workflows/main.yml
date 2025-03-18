@@ -104,6 +104,13 @@ jobs:
 
     - name: Run Build
       run: |
+        library(devtools)
+        library(roxygen2)
+        library(shiny)
+        library(httr)
+        library(rjson)
+        library(raster)
+        library(sf)
         devtools::document()
         devtools::build(path = "./")
       shell: Rscript {0}
