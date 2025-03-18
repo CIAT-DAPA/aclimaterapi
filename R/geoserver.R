@@ -3,23 +3,26 @@
 #' @description Gets and lists all the workspaces of the GeoServer using the HTTP GET method.
 #'
 #' @param url_root Url root where the Geoserver is located.
+#' 
+#' @param user User to authenticate in the Geoserver.
+#' 
+#' @param password Password to authenticate in the Geoserver.
 #'
 #' @return A dataframe with workspace information.
 #'
 #' @examples
 #' url_root = "https://geo.aclimate.org/geoserver/"
-#' obj_f = get_geo_workspaces(url_root)
+#' obj_f = get_geo_workspaces(url_root, user, password)
 #' print(obj_f)
 #'
 #' @export
-get_geo_workspaces = function(url_root){
+get_geo_workspaces = function(url_root, user , password){
     library(httr)
     library(rjson)
     httr::set_config(config(ssl_verifypeer = 0L))
-    credentials <- read.table("./geo_config.txt", header = FALSE, sep = "=")
     # Downloading data
     url = paste0(url_root, "/rest/workspaces.json")
-    request = GET(url, authenticate(credentials$V2[[1]], credentials$V2[[2]]))
+    request = GET(url, authenticate(user, password))
     # Extracting content directly from the request object
     response = httr::content(request, as = "text", encoding = "UTF-8")
     data = fromJSON(response)
@@ -43,24 +46,27 @@ get_geo_workspaces = function(url_root){
 #' @param url_root Url root where the Geoserver is located.
 #'
 #' @param workspace Name of the workspace from which the mosaic datastores are to be obtained.
+#' 
+#' @param user User to authenticate in the Geoserver.
+#' 
+#' @param password Password to authenticate in the Geoserver.
 #'
 #' @return A dataframe with mosaics stores information.
 #'
 #' @examples
 #' url_root = "https://geo.aclimate.org/geoserver/"
 #' workspace = "climate_indices_pe"
-#' obj_f = get_geo_mosaic_name(url_root, workspace)
+#' obj_f = get_geo_mosaic_name(url_root, workspace, user, password)
 #' print(obj_f)
 #'
 #' @export
-get_geo_mosaic_name = function(url_root, workspace){
+get_geo_mosaic_name = function(url_root, workspace, user, password){
     library(httr)
     library(rjson)
     httr::set_config(config(ssl_verifypeer = 0L))
-    credentials <- read.table("./geo_config.txt", header = FALSE, sep = "=")
     # Downloading data
     url = paste0(url_root, "rest/workspaces/", workspace, "/coveragestores.json")
-    request = GET(url, authenticate(credentials$V2[[1]], credentials$V2[[2]]))
+    request = GET(url, authenticate(user, password))
     # Extracting content directly from the request object
     response = httr::content(request, as = "text", encoding = "UTF-8")
     data = fromJSON(response)
@@ -96,6 +102,7 @@ get_geo_mosaic_name = function(url_root, workspace){
 #' @param month Month by which the mosaic will be filtered. Integer (Optional, default value 1)
 #'
 #' @param day Day by which the mosaic will be filtered. Integer (Optional, default value 1)
+#' 
 #'
 #' @return A raster with mosaic information or Null if an error is encountered, it will also be printed to the console.
 #'
@@ -156,24 +163,27 @@ get_geo_mosaics = function(url_root, workspace, mosaic_name, year, month=1, day=
 #' @param url_root Url root where the Geoserver is located.
 #'
 #' @param workspace Name of the workspace from which the polygon datastores are to be obtained.
+#' 
+#' @param user User to authenticate in the Geoserver.
+#' 
+#' @param password Password to authenticate in the Geoserver.
 #'
 #' @return A dataframe with polygons stores information.
 #'
 #' @examples
 #' url_root = "https://geo.aclimate.org/geoserver/"
 #' workspace = "administrative"
-#' obj_f = get_geo_polygon_name(url_root, workspace)
+#' obj_f = get_geo_polygon_name(url_root, workspace, user, password)
 #' print(obj_f)
 #'
 #' @export
-get_geo_polygon_name = function(url_root, workspace){
+get_geo_polygon_name = function(url_root, workspace, user, password){
     library(httr)
     library(rjson)
     httr::set_config(config(ssl_verifypeer = 0L))
-    credentials <- read.table("./geo_config.txt", header = FALSE, sep = "=")
     # Downloading data
     url = paste0(url_root, "rest/workspaces/", workspace, "/datastores.json")
-    request = GET(url, authenticate(credentials$V2[[1]], credentials$V2[[2]]))
+    request = GET(url, authenticate(user, password))
     # Extracting content directly from the request object
     response = httr::content(request, as = "text", encoding = "UTF-8")
     data = fromJSON(response)
