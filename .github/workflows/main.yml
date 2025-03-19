@@ -1,38 +1,39 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
 name: Devops Aclimate R API
 
 on:
   push:
-    branches: [ "stage" ]
+    branches: ["stage"]
     tags:
-    - 'v*'
-
+      - 'v*'
 
 permissions:
   contents: read
 
 jobs:
 
-# ------- START Scripts PROCCESS -------- #
-
   TestScripts:
-
-    runs-on: macos-latest
-
+    runs-on: ubuntu-latest
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
 
     - name: Set up R
-      uses: r-lib/actions/setup-r@f57f1301a053485946083d7a45022b278929a78a
+      uses: r-lib/actions/setup-r@v2
       with:
         r-version: "4.2"
 
+    - name: Cache R packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/R
+        key: r-${{ runner.os }}-${{ hashFiles('DESCRIPTION') }}
+        restore-keys: |
+          r-${{ runner.os }}-
+
     - name: Install dependencies
       run: |
-        install.packages(c("httr", "rjson", "raster", "sf", "webmockr", "testthat"))
+        install.packages("pak", repos = "https://cloud.r-project.org/")
+        pak::pak(c("httr", "rjson", "raster", "sf", "webmockr", "testthat"))
       shell: Rscript {0}
 
     - name: Run Tests
@@ -41,17 +42,12 @@ jobs:
         test_dir("tests");
       shell: Rscript {0}
 
-
-
-# ------- END Scripts PROCCESS -------- #    
-
   GenerateTagName:
     needs: TestScripts
     name: Generate TagName and Set env
     runs-on: ubuntu-latest
     outputs:
       new_tag: ${{ steps.new_tag_step.outputs.new_tag }}
-
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
@@ -67,30 +63,36 @@ jobs:
         DEFAULT_BUMP: patch
         RELEASE_BRANCHES : stage,master
         BRANCH_HISTORY: last
-
     - name: Set env
       id: new_tag_step
       run: echo "new_tag=${{ steps.taggerDryRun.outputs.new_tag }}" >> $GITHUB_OUTPUT
 
-# ------- START RELEASE PROCCESS -------- #
-
   PostRelease:
     needs: GenerateTagName
     name: Create Release
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     permissions: write-all
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
 
     - name: Set up R
-      uses: r-lib/actions/setup-r@f57f1301a053485946083d7a45022b278929a78a
+      uses: r-lib/actions/setup-r@v2
       with:
         r-version: "4.2"
 
+    - name: Cache R packages
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/R
+        key: r-${{ runner.os }}-${{ hashFiles('DESCRIPTION') }}
+        restore-keys: |
+          r-${{ runner.os }}-
+
     - name: Install dependencies
       run: |
-        install.packages(c("httr", "shiny", "rjson", "raster", "sf", "devtools", "roxygen2"))
+        install.packages("pak", repos = "https://cloud.r-project.org/")
+        pak::pak(c("httr", "shiny", "rjson", "raster", "sf", "devtools", "roxygen2"))
       shell: Rscript {0}
 
     - name: Update version in DESCRIPTION
@@ -101,46 +103,38 @@ jobs:
         writeLines(lines, "${{ github.workspace }}/DESCRIPTION")
       shell: Rscript {0}
 
-
     - name: Run Build
       run: |
         library(devtools)
-        library(roxygen2)
-        library(shiny)
-        library(httr)
-        library(rjson)
-        library(raster)
-        library(sf)
         devtools::document()
         devtools::build(path = "./")
       shell: Rscript {0}
-    # Upload Artifacts
+
     - name: Upload artifact for deployment job
       uses: actions/upload-artifact@v4
       with:
         name: Upload artifact
         path: aclimaterapi_${{ needs.GenerateTagName.outputs.new_tag }}.tar.gz
-    # Create release
+    
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
       env:
-        GITHUB_TOKEN: ${{ github.token }}
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         tag_name: ${{ needs.GenerateTagName.outputs.new_tag }}
         release_name: Release ${{ needs.GenerateTagName.outputs.new_tag }}
-        #body_path: ./body.md
         body: ${{ github.event.head_commit.message }}
         draft: false
         prerelease: false
-    # Upload Assets to release
-    - name: Upload Release Asset Scripts
-      id: upload-scripts-release-asset 
+
+    - name: Upload Release Asset
+      id: upload-release-asset
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./aclimaterapi_${{ needs.GenerateTagName.outputs.new_tag }}.tar.gz
         asset_name: aclimaterapi_${{ needs.GenerateTagName.outputs.new_tag }}.tar.gz
         asset_content_type: application/gzip
@@ -158,13 +152,6 @@ jobs:
       with:
         github_token: ${{ secrets.GITHUB_TOKEN }}
         branch: ${{ github.ref }}
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: '0'
-
-# ------- END RELEASE PROCCESS -------- #
-
-# ------- START MERGE PROCCESS -------- #
 
   MergeMainScripts:
     needs: PostRelease
@@ -173,13 +160,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
-
       - name: Merge stage -> master
         uses: devmasx/merge-branch@master
         with:
           type: now
           head_to_merge: ${{ github.ref }}
           target_branch: master
-          github_token: ${{ github.token }}
-
-# ------- END MERGE PROCCESS -------- #
+          github_token: ${{ secrets.GITHUB_TOKEN }}
