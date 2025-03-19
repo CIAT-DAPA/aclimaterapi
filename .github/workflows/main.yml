@@ -84,12 +84,6 @@ jobs:
       with:
         r-version: "4.2"
 
-    - name: Install dependencies
-      run: |
-        install.packages("devtools")
-        install.packages(c("httr", "shiny", "rjson", "raster", "sf", "roxygen2"))
-      shell: Rscript {0}
-
     - name: Update version in DESCRIPTION
       run: |
         version <- "${{ needs.GenerateTagName.outputs.new_tag }}"
@@ -100,6 +94,8 @@ jobs:
 
     - name: Run Build
       run: |
+        install.packages("devtools")
+        install.packages(c("httr", "shiny", "rjson", "raster", "sf", "roxygen2"))
         library(devtools)
         library(roxygen2)
         devtools::document()
