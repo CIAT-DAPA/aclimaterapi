@@ -263,7 +263,9 @@ print(head(df))
 The method **get_geo_workspaces**, function which gets all the workspaces of the GeoServer.
 
 ```r
-obj_f = get_geo_workspaces(url_root)
+user = "your_username"
+password = "your_password"
+obj_f = get_geo_workspaces(url_root, user, password)
 print(obj_f)
 ```
 
@@ -274,8 +276,10 @@ The method **get_geo_mosaic_name**, function which gets all the mosaic stores of
 You can find the workspace in the method **get_geo_workspaces**
 
 ```r
+user = "your_username"
+password = "your_password"
 workspace = "climate_indices_pe"
-obj_f = get_geo_mosaic_name(url_root, workspace)
+obj_f = get_geo_mosaic_name(url_root, workspace, user, password)
 print(obj_f)
 ```
 
@@ -303,8 +307,10 @@ The method **get_geo_polygon_name**, function which gets all the polygon stores 
 You can find the workspace in the method **get_geo_workspaces**
 
 ```r
+user = "your_username"
+password = "your_password"
 workspace = "administrative"
-obj_f = get_geo_polygon_name(url_root, workspace)
+obj_f = get_geo_polygon_name(url_root, workspace, user, password)
 print(obj_f)
 ```
 
@@ -401,19 +407,16 @@ This last step compiles the package, creating a compressed file containing every
     Release 0.0.0
 
 - If you want to increase the last value, you must use the following tag within the commit a stage -> **#patch**
-
   - Current Release = Release 0.0.0
 
   - Release output = Release 0.0.1
 
 - If you want to increase the value of the medium, you must use the following tag within the commit a stage -> **#minor**
-
   - Current Release = Release 0.0.0
 
   - Release output = Release 0.1.0
 
 - If you want to increase the value of the medium, you must use the following tag within the commit a stage -> **#major**
-
   - Current Release = Release 0.0.0
 
   - Release output = Release 1.0.0
