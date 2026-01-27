@@ -66,14 +66,16 @@ Once you have installed the library, you should import it in order to get access
 library("aclimaterapi")
 ```
 
-### Url of the Web API
+### Url of the Web API and Geoserver
 
-The first thing that you have to identify is the url which is located the Web API. This parameter will be asked in all methods. 
 
-You can create a global variable with this url:
+The first thing that you have to identify is the url which is located the Web API and the geoserver link. This parameter will be asked in all methods.
+
+You can create a global variable with these url:
 
 ```{r}
-url_root = "https://webapi.aclimate.org/api/"
+URL_API  = "https://webapi.aclimate.org/api/"
+URL_GEOSERVER  = "https://geo.aclimate.org/geoserver/"
 ```
 
 ## Functions
@@ -83,7 +85,7 @@ url_root = "https://webapi.aclimate.org/api/"
 The method **get_geographic_country** allows to users get a list of all countries.
 
 ```{r}
-df = get_geographic_country(url_root)
+df = get_geographic_country(URL_API)
 print(head(df))
 ```
 
@@ -92,7 +94,7 @@ print(head(df))
 The method **get_geographic** allows to users get a list of all weather stations available in the system.
 
 ```{r}
-df = get_geographic(url_root)
+df = get_geographic(URL_API)
 print(head(df))
 ```
 
@@ -101,7 +103,7 @@ print(head(df))
 The method **get_agronomy** allows to users get a list of cultivars and soils available into the AClimate platform.
 
 ```{r}
-df = get_agronomy(url_root)
+df = get_agronomy(URL_API)
 print(df)
 ```
 
@@ -113,7 +115,7 @@ You can find the ids of the weather stations in the method **get_geographic**
 
 ```{r}
 stations=c("58504f1a006cb93ed40eebe2","58504f1a006cb93ed40eebe3")
-obj_f = get_forecast_climate(url_root, stations)
+obj_f = get_forecast_climate(URL_API, stations)
 print(obj_f$probabilities)
 print(obj_f$performance)
 print(obj_f$scenarios)
@@ -127,7 +129,7 @@ You can find the ids of the weather stations in the method **get_geographic**
 
 ```{r}
 stations=c("58504f1a006cb93ed40eebe2","58504f1a006cb93ed40eebe3")
-df = get_forecast_crop(url_root, stations)
+df = get_forecast_crop(URL_API, stations)
 print(head(df))
 ```
 

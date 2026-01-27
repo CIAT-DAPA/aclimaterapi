@@ -1,53 +1,54 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
-
 name: Devops Aclimate R API
 
 on:
   push:
     branches: [ "stage" ]
     tags:
-    - 'v*'
-
+      - 'v*'
 
 permissions:
   contents: read
 
 jobs:
 
-# ------- START Scripts PROCCESS -------- #
-
   TestScripts:
-
-    runs-on: macos-latest
+    runs-on: ubuntu-latest  # Cambiado de macos-latest a ubuntu-latest
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
-    - name: Create geo_config
-      run: |
-        GEO_CONFIG=$(echo "${{ secrets.GEO_CONFIG }}")
-        echo "$GEO_CONFIG" > geo_config.txt
 
-    - name: Set up R
-      uses: r-lib/actions/setup-r@f57f1301a053485946083d7a45022b278929a78a
-      with:
-        r-version: "4.2"
+    # - name: Install system dependencies
+    #   run: |
+    #     sudo apt-get update
+    #     sudo apt-get install -y \
+    #       libcurl4-openssl-dev \
+    #       libssl-dev \
+    #       libxml2-dev \
+    #       libgdal-dev \
+    #       libproj-dev \
+    #       libgeos-dev \
+    #       libudunits2-dev \
+    #       libfontconfig1-dev \
+    #       libharfbuzz-dev \
+    #       libfribidi-dev
 
-    - name: Install dependencies
-      run: |
-        install.packages(c("httr", "rjson", "raster", "sf", "webmockr", "testthat"))
-      shell: Rscript {0}
+    # - name: Set up R
+    #   uses: r-lib/actions/setup-r@v2
+    #   with:
+    #     r-version: "4.2"
 
-    - name: Run Tests
-      run: |
-        library(testthat)
-        test_dir("tests");
-      shell: Rscript {0}
+    # - name: Install dependencies
+    #   run: |
+    #     install.packages("devtools")
+    #     install.packages(c("httr", "rjson", "raster", "sf", "webmockr", "testthat"))
+    #   shell: Rscript {0}
 
-
-
-# ------- END Scripts PROCCESS -------- #    
+    # - name: Run Tests
+    #   run: |
+    #     library(testthat)
+    #     test_dir("tests");
+    #   shell: Rscript {0}
 
   GenerateTagName:
     needs: TestScripts
@@ -61,6 +62,7 @@ jobs:
       uses: actions/checkout@v3
       with:
         fetch-depth: '0'
+
     - name: Generate TagName
       id: taggerDryRun
       uses: anothrNick/github-tag-action@1.61.0
@@ -69,37 +71,42 @@ jobs:
         WITH_V: false
         DRY_RUN: true
         DEFAULT_BUMP: patch
-        RELEASE_BRANCHES : stage,master
+        RELEASE_BRANCHES: stage,master
         BRANCH_HISTORY: last
 
     - name: Set env
       id: new_tag_step
       run: echo "new_tag=${{ steps.taggerDryRun.outputs.new_tag }}" >> $GITHUB_OUTPUT
 
-# ------- START RELEASE PROCCESS -------- #
-
   PostRelease:
     needs: GenerateTagName
     name: Create Release
-    runs-on: macos-latest
+    runs-on: ubuntu-latest  # Cambiado de macos-latest a ubuntu-latest
     permissions: write-all
+
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v3
-    - name: Create geo_config
+
+    - name: Install system dependencies
       run: |
-        GEO_CONFIG=$(echo "${{ secrets.GEO_CONFIG }}")
-        echo "$GEO_CONFIG" > geo_config.txt
+        sudo apt-get update
+        sudo apt-get install -y \
+          libcurl4-openssl-dev \
+          libssl-dev \
+          libxml2-dev \
+          libgdal-dev \
+          libproj-dev \
+          libgeos-dev \
+          libudunits2-dev \
+          libfontconfig1-dev \
+          libharfbuzz-dev \
+          libfribidi-dev
 
     - name: Set up R
-      uses: r-lib/actions/setup-r@f57f1301a053485946083d7a45022b278929a78a
+      uses: r-lib/actions/setup-r@v2
       with:
         r-version: "4.2"
-
-    - name: Install dependencies
-      run: |
-        install.packages(c("httr", "rjson", "raster", "sf", "devtools", "roxygen2"))
-      shell: Rscript {0}
 
     - name: Update version in DESCRIPTION
       run: |
@@ -109,19 +116,22 @@ jobs:
         writeLines(lines, "${{ github.workspace }}/DESCRIPTION")
       shell: Rscript {0}
 
-
     - name: Run Build
       run: |
+        install.packages("devtools")
+        install.packages(c("httr", "shiny", "rjson", "raster", "sf", "roxygen2"))
+        library(devtools)
+        library(roxygen2)
         devtools::document()
         devtools::build(path = "./")
       shell: Rscript {0}
-    # Upload Artifacts
+
     - name: Upload artifact for deployment job
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: Upload artifact
         path: aclimaterapi_${{ needs.GenerateTagName.outputs.new_tag }}.tar.gz
-    # Create release
+
     - name: Create Release
       id: create_release
       uses: actions/create-release@v1
@@ -130,42 +140,31 @@ jobs:
       with:
         tag_name: ${{ needs.GenerateTagName.outputs.new_tag }}
         release_name: Release ${{ needs.GenerateTagName.outputs.new_tag }}
-        #body_path: ./body.md
         body: ${{ github.event.head_commit.message }}
         draft: false
         prerelease: false
-    # Upload Assets to release
+
     - name: Upload Release Asset Scripts
       id: upload-scripts-release-asset 
       uses: actions/upload-release-asset@v1
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps 
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: ./aclimaterapi_${{ needs.GenerateTagName.outputs.new_tag }}.tar.gz
         asset_name: aclimaterapi_${{ needs.GenerateTagName.outputs.new_tag }}.tar.gz
         asset_content_type: application/gzip
 
-    - name: Commit Changes to stage branch
-      run: |
-        git checkout stage
-        git add man/
-        git add DESCRIPTION
-        git commit -m "GitHub Actions Update documentation"
-        git push origin stage
-
-    - name: Push Changes
-      uses: ad-m/github-push-action@master
+    - name: Commit changes
+      uses: stefanzweifel/git-auto-commit-action@v4
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        github_token: ${{ secrets.GITHUB_TOKEN }}
-        branch: ${{ github.ref }}
-    - uses: actions/checkout@v3
-      with:
-        fetch-depth: '0'
-
-# ------- END RELEASE PROCCESS -------- #
-
-# ------- START MERGE PROCCESS -------- #
+        commit_message: "Update version to ${{ needs.GenerateTagName.outputs.new_tag }}"
+        branch: stage
+        file_pattern: |
+          DESCRIPTION
+          man/*
 
   MergeMainScripts:
     needs: PostRelease
@@ -182,5 +181,3 @@ jobs:
           head_to_merge: ${{ github.ref }}
           target_branch: master
           github_token: ${{ github.token }}
-
-# ------- END MERGE PROCCESS -------- #

@@ -140,7 +140,7 @@ get_historical_historicalyield = function(url_root, stations, years){
     response = content(request, as = "text", encoding = "UTF-8")
     data = fromJSON(response)
     df = do.call(rbind,
-                    lapply(data$yield,function(w){
+                    lapply(data,function(w){
                         do.call(rbind,lapply(w$yield,function(wy){
                             do.call(rbind,lapply(wy$data,function(y){
                                 data.frame(ws_id=w$weather_station,

@@ -4,10 +4,14 @@
 \alias{get_geo_workspaces}
 \title{Get geoserver workspace}
 \usage{
-get_geo_workspaces(url_root)
+get_geo_workspaces(url_root, user, password)
 }
 \arguments{
 \item{url_root}{Url root where the Geoserver is located.}
+
+\item{user}{User to authenticate in the Geoserver.}
+
+\item{password}{Password to authenticate in the Geoserver.}
 }
 \value{
 A dataframe with workspace information.
@@ -17,7 +21,7 @@ Gets and lists all the workspaces of the GeoServer using the HTTP GET method.
 }
 \examples{
 url_root = "https://geo.aclimate.org/geoserver/"
-obj_f = get_geo_workspaces(url_root)
+obj_f = get_geo_workspaces(url_root, user, password)
 print(obj_f)
 
 }
