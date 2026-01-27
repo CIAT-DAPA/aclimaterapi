@@ -262,10 +262,13 @@ print(head(df))
 
 The method **get_geo_workspaces**, function which gets all the workspaces of the GeoServer.
 
+**Note:** For geoserver functions, use the geoserver URL instead of the API URL:
+
 ```r
+url_geoserver = "https://geo.aclimate.org/geoserver/"
 user = "your_username"
 password = "your_password"
-obj_f = get_geo_workspaces(url_root, user, password)
+obj_f = get_geo_workspaces(url_geoserver, user, password)
 print(obj_f)
 ```
 
@@ -279,7 +282,7 @@ You can find the workspace in the method **get_geo_workspaces**
 user = "your_username"
 password = "your_password"
 workspace = "climate_indices_pe"
-obj_f = get_geo_mosaic_name(url_root, workspace, user, password)
+obj_f = get_geo_mosaic_name(url_geoserver, workspace, user, password)
 print(obj_f)
 ```
 
@@ -296,7 +299,7 @@ mosaic_name = "freq_rh80_t_20_25"
 year = 2014
 month = 5
 day = 1
-raster = get_geo_mosaics(url_root, workspace, mosaic_name, year, month, day)
+raster = get_geo_mosaics(url_geoserver, workspace, mosaic_name, year, month, day)
 print(raster)
 ```
 
@@ -310,7 +313,7 @@ You can find the workspace in the method **get_geo_workspaces**
 user = "your_username"
 password = "your_password"
 workspace = "administrative"
-obj_f = get_geo_polygon_name(url_root, workspace, user, password)
+obj_f = get_geo_polygon_name(url_geoserver, workspace, user, password)
 print(obj_f)
 ```
 
@@ -324,7 +327,7 @@ You can find the polygon_name in the method **get_geo_polygon_name**
 ```r
 workspace = "administrative"
 polygon_name = "ao_adm1"
-shapefile = get_geo_polygons(url_root, workspace, polygon_name)
+shapefile = get_geo_polygons(url_geoserver, workspace, polygon_name)
 print(shapefile)
 ```
 
